@@ -1,17 +1,15 @@
 from twilio.rest import Client
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+import streamlit as st
 
 class SMSService:
     def __init__(self):
-        self.account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-        self.auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-        self.phone_number = os.getenv('TWILIO_PHONE_NUMBER')
+        # Get credentials from Streamlit secrets
+        self.account_sid = st.secrets.get('TWILIO_ACCOUNT_SID')
+        self.auth_token = st.secrets.get('TWILIO_AUTH_TOKEN')
+        self.phone_number = st.secrets.get('TWILIO_PHONE_NUMBER')
         
-        # For Streamlit Cloud - use the actual deployed URL
-        self.server_url = os.getenv('SERVER_URL', 'https://your-app-name.streamlit.app')
+        # Get server URL from secrets
+        self.server_url = st.secrets.get('SERVER_URL', 'https://your-app-name.streamlit.app')
         
         self.is_configured = bool(self.account_sid and self.auth_token and self.phone_number)
         
