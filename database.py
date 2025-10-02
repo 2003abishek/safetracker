@@ -3,10 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime, timedelta
 import uuid
+import streamlit as st
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 Base = declarative_base()
 
@@ -38,7 +36,8 @@ class LocationUpdate(Base):
 
 class Database:
     def __init__(self):
-        self.database_url = os.getenv('DATABASE_URL', 'sqlite:///safetrack.db')
+        # Use Streamlit secrets for database URL
+        self.database_url = st.secrets.get('DATABASE_URL', 'sqlite:///safetrack.db')
         self.engine = create_engine(self.database_url)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         
