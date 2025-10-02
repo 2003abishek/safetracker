@@ -6,3 +6,4 @@ geopy==2.3.0
 folium==0.14.0
 streamlit-folium==0.15.1
 pandas==2.1.1
+qrcode[pil]==7.4.2
