@@ -9,23 +9,35 @@ class SMSService:
         self.account_sid = os.getenv('TWILIO_ACCOUNT_SID')
         self.auth_token = os.getenv('TWILIO_AUTH_TOKEN')
         self.phone_number = os.getenv('TWILIO_PHONE_NUMBER')
-        self.server_url = os.getenv('SERVER_URL', 'http://localhost:8501')
         
-        if self.account_sid and self.auth_token:
-            self.client = Client(self.account_sid, self.auth_token)
+        # For Streamlit Cloud - use the actual deployed URL
+        self.server_url = os.getenv('SERVER_URL', 'https://your-app-name.streamlit.app')
+        
+        self.is_configured = bool(self.account_sid and self.auth_token and self.phone_number)
+        
+        if self.is_configured:
+            try:
+                self.client = Client(self.account_sid, self.auth_token)
+            except Exception as e:
+                print(f"Twilio initialization failed: {e}")
+                self.client = None
+                self.is_configured = False
         else:
             self.client = None
     
     def send_tracking_request(self, recipient_phone, tracking_id, custom_message=None):
-        if not self.client:
+        tracking_url = f"{self.server_url}/?tracking_id={tracking_id}"
+        
+        if not self.is_configured:
             return {
                 'success': False,
-                'error': 'Twilio credentials not configured',
-                'debug_url': f"{self.server_url}/?tracking_id={tracking_id}"
+                'sms_sent': False,
+                'error': 'Twilio not configured',
+                'tracking_url': tracking_url,
+                'message': 'Manual sharing required - copy and send the URL'
             }
         
         try:
-            tracking_url = f"{self.server_url}/?tracking_id={tracking_id}"
             message_body = f"{custom_message or 'Please share your location for safety reasons.'}\n\nShare your location here: {tracking_url}\n\nThis link will expire in 24 hours."
             
             message = self.client.messages.create(
@@ -36,6 +48,7 @@ class SMSService:
             
             return {
                 'success': True,
+                'sms_sent': True,
                 'message_sid': message.sid,
                 'tracking_url': tracking_url
             }
@@ -43,7 +56,9 @@ class SMSService:
         except Exception as e:
             return {
                 'success': False,
-                'error': str(e)
+                'sms_sent': False,
+                'error': str(e),
+                'tracking_url': tracking_url
             }
 
 sms_service = SMSService()
